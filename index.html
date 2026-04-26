@@ -6,112 +6,330 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: var(--tg-theme-bg-color, #ffffff);
-            --text-color: var(--tg-theme-text-color, #000000);
-            --hint-color: var(--tg-theme-hint-color, #999999);
-            --button-color: var(--tg-theme-button-color, #248bed);
-            --secondary-bg: var(--tg-theme-secondary-bg-color, #f4f4f5);
+            --bg-color: #0F0F0F;
+            --accent-color: #4AD9FF;
+            --text-main: #FFFFFF;
+            --text-hint: #808080;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-hover-bg: rgba(74, 217, 255, 0.06);
         }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0; padding: 16px;
-            display: flex; flex-direction: column;
+            color: var(--text-main);
+            margin: 0;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
-        h2 { font-size: 20px; margin-bottom: 20px; }
-        .task-list { list-style: none; padding: 0; margin: 0; }
-        .task-item {
+
+        .header-container {
+            height: 60px;
+            margin-bottom: 30px;
+            display: flex; justify-content: center; align-items: center; text-align: center;
+        }
+
+        h2 {
+            margin: 0; font-weight: 700; font-size: 22px; letter-spacing: -0.5px;
+            border-right: 2px solid var(--accent-color);
+            white-space: nowrap; overflow: hidden; width: 0;
+            display: inline-block; animation: caret 0.7s step-end infinite;
+        }
+
+        @keyframes caret { from, to { border-color: transparent } 50% { border-color: var(--accent-color) } }
+
+        /* Плашки с мягкой анимацией */
+        .task-item, .add-placeholder {
+            background: var(--card-bg);
+            border: 1px solid rgba(74, 217, 255, 0.1);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 12px;
             display: flex; align-items: center;
-            padding: 12px; background: var(--secondary-bg);
-            border-radius: 12px; margin-bottom: 8px;
-            transition: all 0.2s ease;
-        }
-        .task-item.completed { opacity: 0.6; }
-        .checkbox {
-            width: 22px; height: 22px;
-            border: 2px solid var(--button-color);
-            border-radius: 50%; margin-right: 12px;
-            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transform: translateY(15px);
+            animation: slideIn 0.5s ease forwards;
+            /* Более мягкий переход */
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+                        background 0.4s ease,
+                        border-color 0.4s ease,
+                        box-shadow 0.4s ease;
             cursor: pointer;
+            position: relative;
         }
-        .checkbox.checked { background: var(--button-color); }
-        .checkbox.checked::after {
-            content: '✓'; color: white; font-size: 14px;
+
+        .task-item:hover, .add-placeholder:hover {
+            transform: scale(1.01) translateY(-1px); /* Очень легкое увеличение */
+            background: var(--card-hover-bg);
+            border-color: rgba(74, 217, 255, 0.3);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
         }
-        .task-text { flex-grow: 1; font-size: 16px; }
-        .task-text.strikethrough { text-decoration: line-through; }
-        #add-container {
-            position: fixed; bottom: 20px; left: 16px; right: 16px;
-            display: flex; gap: 8px;
+
+        .task-item:active, .add-placeholder:active {
+            transform: scale(0.99); /* Мягкое сжатие */
+            transition: transform 0.1s;
         }
-        input {
-            flex-grow: 1; padding: 12px; border-radius: 10px;
-            border: 1px solid var(--hint-color);
-            background: var(--bg-color); color: var(--text-color);
+
+        @keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
+
+        /* Идеально центрированный плюс */
+        .plus-icon {
+            width: 26px; height: 26px;
+            border: 1.5px solid var(--accent-color);
+            border-radius: 50%;
+            margin-right: 15px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--accent-color);
+            flex-shrink: 0;
+            font-size: 20px;
+            line-height: 0; /* Убирает смещение текста */
+            transition: transform 0.3s ease;
         }
-        button {
-            padding: 12px 20px; border-radius: 10px; border: none;
-            background: var(--button-color); color: white; font-weight: bold;
+
+        .add-placeholder:hover .plus-icon {
+            transform: rotate(90deg);
+            background: var(--accent-color);
+            color: #000;
         }
+
+        /* Иконка и кнопка в правом углу */
+        .right-action {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 5;
+        }
+
+        .edit-icon {
+            color: var(--text-hint);
+            font-size: 18px;
+            padding: 8px;
+            opacity: 0.5;
+            transition: opacity 0.2s, color 0.2s;
+        }
+
+        .edit-icon:hover { color: var(--accent-color); opacity: 1; }
+
+        .inline-ok {
+            background: var(--accent-color);
+            border: none; border-radius: 10px;
+            padding: 6px 14px;
+            color: #000; font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(74, 217, 255, 0.2);
+        }
+
+        .edit-input {
+            background: transparent; border: none;
+            color: white; font-size: 17px;
+            width: 100%; outline: none;
+        }
+
+        .checkbox-container {
+            width: 24px; height: 24px;
+            border: 2px solid var(--accent-color);
+            border-radius: 50%;
+            margin-right: 15px;
+            position: relative; flex-shrink: 0;
+            pointer-events: none;
+        }
+
+        .checkbox-container.checked {
+            background: var(--accent-color);
+            box-shadow: 0 0 15px var(--accent-color);
+        }
+
+        .checkbox-container.checked::after {
+            content: '✓'; position: absolute; color: #000;
+            font-weight: bold; font-size: 14px; left: 5px; top: 2px;
+        }
+
+        .task-text { font-size: 17px; flex-grow: 1; padding-right: 45px; }
+        .completed { opacity: 0.4; }
+        .completed .task-text { text-decoration: line-through; }
+
     </style>
 </head>
 <body>
-    <h2>Задачи на сегодня</h2>
-    <div class="task-list" id="taskList"></div>
 
-    <div id="add-container">
-        <input type="text" id="taskInput" placeholder="Новая задача...">
-        <button onclick="addTask()">+</button>
+<div class="header-container">
+    <h2 id="typewriter"></h2>
+</div>
+
+<div class="task-list" id="taskList"></div>
+
+<div class="add-placeholder" id="addZone" onclick="openAddMode()">
+    <div class="plus-icon">+</div>
+    <div id="addStatic" style="flex-grow:1;">
+        <span style="color: var(--text-hint); font-size: 17px;">Вписать свою ЦЕЛЬ в историю</span>
     </div>
+    <div id="addActive" style="display:none; align-items:center; flex-grow:1;">
+        <input type="text" id="inlineInput" class="edit-input" placeholder="Пиши здесь...">
+        <div class="right-action">
+            <button class="inline-ok" onclick="submitNewTask(event)">OK</button>
+        </div>
+    </div>
+</div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        const listElement = document.getElementById('taskList');
-        const inputElement = document.getElementById('taskInput');
+<script>
+    const tg = window.Telegram.WebApp;
+    const listElement = document.getElementById('taskList');
+    const addZone = document.getElementById('addZone');
+    const inlineInput = document.getElementById('inlineInput');
+    const titleElement = document.getElementById('typewriter');
 
-        tg.expand();
-        tg.ready();
+    tg.expand();
+    tg.ready();
+    tg.setHeaderColor('#0F0F0F');
 
-        let tasks = JSON.parse(localStorage.getItem('my_tasks') || '[]');
+    // База фраз по времени суток
+    const greetings = {
+        morning: [
+            "Утро — лучшее время, чтобы поставить цели",
+            "Спишь? А ТВОИ цели не спят",
+            "Твой день — твои достижения",
+            "Утро, тишина мыслей, время определить ЦЕЛИ",
+            "Утро, свежесть, идеальное время задать направление"
+        ],
+        day: [
+            "День в разгаре, самое время добавить ЦЕЛИ",
+            "День, ясность, время двигаться к целям",
+            "День дышит движением, будь в потоке",
+            "Сейчас, здесь, делай важное",
+            "Меньше мыслей — больше действий"
+        ],
+        evening: [
+            "Ночь, Тишина, самое время для формулировки ЦЕЛЕЙ",
+            "День позади, время отметить победы",
+            "Ночь, концентрация, формулируй главное",
+            "Когда всё замолкает, рождаются цели",
+            "Без ТЬМЫ не было бы СВЕТА, без ЦЕЛЕЙ — РЕЗУЛЬТАТА"
+        ]
+    };
 
-        function render() {
-            listElement.innerHTML = '';
-            tasks.forEach((task, index) => {
-                const item = document.createElement('div');
-                item.className = `task-item ${task.done ? 'completed' : ''}`;
-                item.innerHTML = `
-                    <div class="checkbox ${task.done ? 'checked' : ''}" onclick="toggleTask(${index})"></div>
-                    <span class="task-text ${task.done ? 'strikethrough' : ''}">${task.text}</span>
-                    <span style="color: var(--hint-color); cursor:pointer" onclick="deleteTask(${index})">✕</span>
-                `;
-                listElement.appendChild(item);
-            });
-            localStorage.setItem('my_tasks', JSON.stringify(tasks));
+    function getGreeting() {
+        const hour = new Date().getHours();
+        let category;
+        if (hour >= 5 && hour < 12) category = 'morning';
+        else if (hour >= 12 && hour < 18) category = 'day';
+        else category = 'evening';
+
+        const pool = greetings[category];
+        return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    // Печать заголовка
+    const titleText = getGreeting();
+    let charIdx = 0;
+    function typeWriter() {
+        if (charIdx < titleText.length) {
+            titleElement.innerHTML += titleText.charAt(charIdx);
+            titleElement.style.width = "auto";
+            charIdx++;
+            setTimeout(typeWriter, 60); // Чуть ускорил печать для длинных фраз
+        } else {
+            titleElement.style.borderRight = "none";
         }
+    }
 
-        function addTask() {
-            const text = inputElement.value.trim();
-            if (text) {
-                tasks.push({ text, done: false });
-                inputElement.value = '';
-                tg.HapticFeedback.impactOccurred('light');
-                render();
-            }
+    let tasks = JSON.parse(localStorage.getItem('dg18_tasks') || '[]');
+
+    function render() {
+        listElement.innerHTML = '';
+        tasks.forEach((task, index) => {
+            const item = document.createElement('div');
+            item.className = `task-item ${task.done ? 'completed' : ''}`;
+            item.onclick = () => toggleTask(index);
+
+            item.innerHTML = `
+                <div class="checkbox-container ${task.done ? 'checked' : ''}" id="check-${index}"></div>
+                <span class="task-text" id="text-${index}">${task.text}</span>
+
+                <div class="right-action" id="action-${index}">
+                    <div class="edit-icon" onclick="openEditMode(event, ${index})">✎</div>
+                </div>
+
+                <div id="edit-box-${index}" style="display:none; align-items:center; width:100%;">
+                    <input type="text" class="edit-input" id="input-${index}" value="${task.text}">
+                    <div class="right-action">
+                        <button class="inline-ok" onclick="saveEdit(event, ${index})">OK</button>
+                    </div>
+                </div>
+            `;
+            listElement.appendChild(item);
+        });
+        localStorage.setItem('dg18_tasks', JSON.stringify(tasks));
+    }
+
+    function openAddMode() {
+        if (addZone.dataset.mode === 'active') return;
+        addZone.dataset.mode = 'active';
+        document.getElementById('addStatic').style.display = 'none';
+        document.getElementById('addActive').style.display = 'flex';
+        inlineInput.focus();
+        tg.HapticFeedback.impactOccurred('light');
+    }
+
+    function submitNewTask(e) {
+        e.stopPropagation();
+        const val = inlineInput.value.trim();
+        if (val) {
+            tasks.push({ text: val, done: false });
+            closeAddMode();
+            tg.HapticFeedback.impactOccurred('medium');
+            render();
         }
+    }
 
-        window.toggleTask = (index) => {
-            tasks[index].done = !tasks[index].done;
-            tg.HapticFeedback.selectionChanged();
+    function closeAddMode() {
+        addZone.dataset.mode = '';
+        inlineInput.value = '';
+        document.getElementById('addStatic').style.display = 'block';
+        document.getElementById('addActive').style.display = 'none';
+    }
+
+    window.openEditMode = (e, index) => {
+        e.stopPropagation();
+        document.getElementById(`text-${index}`).style.display = 'none';
+        document.getElementById(`check-${index}`).style.display = 'none';
+        document.getElementById(`action-${index}`).style.display = 'none';
+
+        const box = document.getElementById(`edit-box-${index}`);
+        box.style.display = 'flex';
+        const inp = document.getElementById(`input-${index}`);
+        inp.focus();
+        inp.setSelectionRange(inp.value.length, inp.value.length);
+    };
+
+    window.saveEdit = (e, index) => {
+        e.stopPropagation();
+        const newVal = document.getElementById(`input-${index}`).value.trim();
+        if (newVal) {
+            tasks[index].text = newVal;
             render();
-        };
+            tg.HapticFeedback.impactOccurred('light');
+        }
+    };
 
-        window.deleteTask = (index) => {
-            tasks.splice(index, 1);
-            render();
-        };
-
+    window.toggleTask = (index) => {
+        tasks[index].done = !tasks[index].done;
+        tg.HapticFeedback.selectionChanged();
         render();
-    </script>
+    };
+
+    document.addEventListener('click', (e) => {
+        if (!addZone.contains(e.target)) closeAddMode();
+    });
+
+    inlineInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') submitNewTask(e); });
+
+    window.onload = () => {
+        typeWriter();
+        render();
+    };
+</script>
+
 </body>
 </html>
