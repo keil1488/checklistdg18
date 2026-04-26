@@ -255,7 +255,48 @@
         }
     }
 
+    // ── API синхронизация с ботом ──────────────────────────────────────────
+    const API_URL = "https://dg18bot-production.up.railway.app";
+    const WEBAPP_SECRET = "dg18secret"; // должен совпадать с WEBAPP_SECRET в api.py
+    const userId = tg.initDataUnsafe?.user?.id;
+
+    async function syncWithBot(deletedId = null) {
+        if (!userId) return; // не в Telegram — пропускаем
+        try {
+            if (deletedId) {
+                await fetch(`${API_URL}/goals/delete`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Secret": WEBAPP_SECRET },
+                    body: JSON.stringify({ goal_id: deletedId })
+                });
+            } else {
+                const payload = tasks.map(t => ({
+                    id: t.id,
+                    text: t.text,
+                    done: t.done,
+                    deadline: t.deadline || null,
+                    createdAt: t.createdAt || Date.now()
+                }));
+                await fetch(`${API_URL}/goals/sync`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Secret": WEBAPP_SECRET },
+                    body: JSON.stringify({ user_id: userId, goals: payload })
+                });
+            }
+        } catch (e) {
+            console.warn("Sync failed:", e);
+        }
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
     let tasks = JSON.parse(localStorage.getItem('dg18_tasks') || '[]');
+
+    // Добавляем id и createdAt к старым задачам без них
+    tasks = tasks.map(t => ({
+        ...t,
+        id: t.id || `task_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        createdAt: t.createdAt || Date.now()
+    }));
 
     function render() {
         listElement.innerHTML = '';
@@ -322,8 +363,11 @@
         const m = parseInt(document.getElementById('td-m').value) || 0;
         const s = parseInt(document.getElementById('td-s').value) || 0;
         if (d+h+m+s > 0) dl = new Date().getTime() + (d*86400000) + (h*3600000) + (m*60000) + (s*1000);
-        tasks.push({ text: val, done: false, deadline: dl });
-        resetForm(); render();
+        tasks.push({
+            id: `task_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+            text: val, done: false, deadline: dl, createdAt: Date.now()
+        });
+        resetForm(); render(); syncWithBot();
         try { tg.HapticFeedback.impactOccurred('medium'); } catch(e){}
     }
     function resetForm() {
@@ -342,10 +386,16 @@
         e.stopPropagation();
         const newVal = document.getElementById(`input-${i}`).value.trim();
         if (newVal !== "") tasks[i].text = newVal;
-        render();
+        render(); syncWithBot();
     };
-    window.deleteTask = (e, i) => { e.stopPropagation(); tasks.splice(i, 1); render(); };
-    window.toggleTask = (i) => { tasks[i].done = !tasks[i].done; render(); };
+    window.deleteTask = (e, i) => {
+        e.stopPropagation();
+        const deletedId = tasks[i].id;
+        tasks.splice(i, 1);
+        render();
+        syncWithBot(deletedId);
+    };
+    window.toggleTask = (i) => { tasks[i].done = !tasks[i].done; render(); syncWithBot(); };
 
     render();
 </script>
