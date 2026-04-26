@@ -5,222 +5,125 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --bg-color: #0F0F0F;
-            --accent-color: #4AD9FF;
-            --timer-color: #FF9F4A;
-            --danger-color: #FF4A4A;
-            --text-main: #FFFFFF;
-            --text-hint: #808080;
-            --card-bg: rgba(255, 255, 255, 0.03);
-            --card-hover-bg: rgba(74, 217, 255, 0.06);
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-color); color: var(--text-main);
-            margin: 0; padding: 24px 20px; display: flex; flex-direction: column; min-height: 100vh;
-        }
-
-        .header-container { margin-bottom: 35px; text-align: center; }
-        #local-clock { font-size: 28px; font-weight: 700; color: var(--accent-color); font-family: monospace; text-shadow: 0 0 10px rgba(74, 217, 255, 0.4); }
-
-        .task-item, .add-placeholder {
-            background: var(--card-bg); border: 1px solid rgba(74, 217, 255, 0.1);
-            border-radius: 18px; padding: 18px; margin-bottom: 12px;
-            display: flex; flex-direction: column; position: relative;
-        }
-
-        .task-row { display: flex; align-items: center; width: 100%; }
-        .plus-icon { width: 26px; height: 26px; border: 1.5px solid var(--accent-color); border-radius: 50%; margin-right: 15px; display: flex; align-items: center; justify-content: center; color: var(--accent-color); }
-
-        .right-action { position: absolute; right: 12px; top: 18px; display: flex; gap: 4px; }
-        .delete-icon { color: var(--danger-color); padding: 8px; font-size: 18px; opacity: 0.6; }
-
-        .inline-ok { background: var(--accent-color); border: none; border-radius: 10px; padding: 6px 14px; font-weight: bold; }
-
-        .checkbox-container { width: 24px; height: 24px; border: 2px solid var(--accent-color); border-radius: 50%; margin-right: 15px; position: relative; flex-shrink: 0; }
-        .checkbox-container.checked { background: var(--accent-color); }
-        .checkbox-container.checked::after { content: '✓'; position: absolute; color: #000; left: 5px; top: 2px; font-weight: bold; }
-
-        .task-text { font-size: 17px; flex-grow: 1; padding-right: 50px; }
-        .edit-input { background: transparent; border: none; color: white; font-size: 17px; width: 100%; outline: none; }
-
-        .timer-badge { font-size: 12px; color: var(--timer-color); margin-top: 10px; font-family: monospace; background: rgba(255, 159, 74, 0.1); padding: 2px 8px; border-radius: 6px; width: fit-content; }
-        .timer-expired { color: var(--danger-color); background: rgba(255, 74, 74, 0.1); }
-
-        .time-selector { margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
-        .time-inputs-group { display: flex; gap: 8px; margin-top: 10px; }
-        .time-field { display: flex; flex-direction: column; align-items: center; }
-        .time-field span { font-size: 10px; color: var(--text-hint); }
-        .time-input { background: rgba(255,255,255,0.05); border: 1px solid rgba(74, 217, 255, 0.3); color: white; border-radius: 8px; width: 40px; text-align: center; padding: 5px; }
-
+        :root { --bg-color: #0F0F0F; --accent-color: #4AD9FF; --timer-color: #FF9F4A; --danger-color: #FF4A4A; --text-main: #FFFFFF; --text-hint: #808080; --card-bg: rgba(255, 255, 255, 0.03); }
+        body { font-family: sans-serif; background: var(--bg-color); color: var(--text-main); padding: 20px; margin: 0; }
+        .task-item, .add-placeholder { background: var(--card-bg); border: 1px solid rgba(74,217,255,0.1); border-radius: 15px; padding: 15px; margin-bottom: 10px; position: relative; }
+        .task-row { display: flex; align-items: center; }
+        .checkbox { width: 22px; height: 22px; border: 2px solid var(--accent-color); border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
+        .checkbox.checked { background: var(--accent-color); }
+        .task-text { flex-grow: 1; font-size: 16px; }
+        .timer-badge { font-size: 11px; color: var(--timer-color); margin-top: 8px; font-family: monospace; }
+        .timer-expired { color: var(--danger-color); }
+        .delete-btn { color: var(--danger-color); font-size: 18px; margin-left: 10px; cursor: pointer; }
+        .add-active { display: none; flex-direction: column; }
+        .time-inputs { display: flex; gap: 5px; margin-top: 10px; }
+        input { background: rgba(255,255,255,0.1); border: 1px solid var(--accent-color); color: white; border-radius: 5px; padding: 5px; width: 40px; text-align: center; }
+        .btn-ok { background: var(--accent-color); color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: bold; margin-top: 10px; }
         .completed { opacity: 0.4; }
-        .completed .task-text { text-decoration: line-through; }
     </style>
 </head>
 <body>
 
-<div class="header-container">
-    <div id="local-clock">00:00:00</div>
-</div>
-
 <div id="taskList"></div>
 
-<div class="add-placeholder" id="addZone" onclick="openAddMode()">
-    <div id="addStatic" class="task-row">
-        <div class="plus-icon">+</div>
-        <span style="color: var(--text-hint);">Вписать свою ЦЕЛЬ</span>
-    </div>
-    <div id="addActive" style="display:none; flex-direction:column;">
-        <div class="task-row">
-            <input type="text" id="inlineInput" class="edit-input" placeholder="Название цели...">
-            <div class="right-action"><button class="inline-ok" onclick="submitNewTask(event)">OK</button></div>
+<div class="add-placeholder" id="addZone">
+    <div id="addStatic" onclick="openAdd()">+ Вписать цель</div>
+    <div id="addActive" class="add-active">
+        <input type="text" id="taskText" placeholder="Что нужно сделать?" style="width: 100%; margin-bottom: 10px;">
+        <div style="font-size: 12px; color: var(--accent-color);">Таймер (Д:Ч:М:С)</div>
+        <div class="time-inputs">
+            <input type="number" id="d" placeholder="0">
+            <input type="number" id="h" placeholder="0">
+            <input type="number" id="m" placeholder="0">
+            <input type="number" id="s" placeholder="0">
         </div>
-        <div class="time-selector">
-            <div id="toggleTime" onclick="toggleTimerFields(event)" style="color: var(--accent-color); font-size: 13px; cursor: pointer;">⏱ Добавить дедлайн</div>
-            <div id="timerFields" style="display:none;">
-                <div class="time-inputs-group">
-                    <div class="time-field"><input type="number" id="dInput" class="time-input" placeholder="0"><span>Дн</span></div>
-                    <div class="time-field"><input type="number" id="hInput" class="time-input" placeholder="0"><span>Час</span></div>
-                    <div class="time-field"><input type="number" id="mInput" class="time-input" placeholder="0"><span>Мин</span></div>
-                    <div class="time-field"><input type="number" id="sInput" class="time-input" placeholder="0"><span>Сек</span></div>
-                </div>
-            </div>
-        </div>
+        <button class="btn-ok" onclick="addTask()">Добавить цель</button>
     </div>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
-    const API_URL = ""; // Если на одном сервере, оставить пустым
+    const USER_ID = tg.initDataUnsafe?.user?.id || 12345;
     const SECRET = "dg18secret";
-    const USER_ID = tg.initDataUnsafe?.user?.id || 123456; // ID пользователя из ТГ
+    let tasks = JSON.parse(localStorage.getItem('tasks_v3') || '[]');
 
-    let tasks = JSON.parse(localStorage.getItem('dg18_tasks_v3') || '[]');
-    let isTimerEnabled = false;
+    function openAdd() {
+        document.getElementById('addStatic').style.display = 'none';
+        document.getElementById('addActive').style.display = 'flex';
+        document.getElementById('taskText').focus();
+    }
 
-    function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
-
-    async function syncWithServer() {
+    async function sync() {
+        localStorage.setItem('tasks_v3', JSON.stringify(tasks));
         try {
-            await fetch('/goals/sync', {
+            await fetch('https://github.com/keil1488/DG18bot', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-Secret': SECRET },
                 body: JSON.stringify({ user_id: USER_ID, goals: tasks })
             });
-        } catch (e) { console.error("Sync error:", e); }
+        } catch(e) {}
     }
 
-    function updateClock() {
-        document.getElementById('local-clock').textContent = new Date().toLocaleTimeString('ru-RU');
-    }
-    setInterval(updateClock, 1000);
-
-    function render() {
-        const list = document.getElementById('taskList');
-        list.innerHTML = '';
-        tasks.forEach((task, index) => {
-            const item = document.createElement('div');
-            item.className = `task-item ${task.done ? 'completed' : ''}`;
-            item.onclick = () => toggleTask(index);
-
-            let timerHtml = '';
-            if (task.deadline && !task.done) timerHtml = `<div class="timer-badge" id="timer-${index}">⏱ Расчет...</div>`;
-
-            item.innerHTML = `
-                <div class="task-row">
-                    <div class="checkbox-container ${task.done ? 'checked' : ''}"></div>
-                    <span class="task-text">${task.text}</span>
-                    <div class="right-action"><div class="delete-icon" onclick="deleteTask(event, '${task.id}')">🗑</div></div>
-                </div>
-                ${timerHtml}
-            `;
-            list.appendChild(item);
-        });
-        localStorage.setItem('dg18_tasks_v3', JSON.stringify(tasks));
-        updateTimers();
-    }
-
-    function updateTimers() {
-        tasks.forEach((task, index) => {
-            if (!task.deadline || task.done) return;
-            const el = document.getElementById(`timer-${index}`);
-            if (!el) return;
-            const left = task.deadline - Date.now();
-            if (left <= 0) {
-                el.innerHTML = "⌛ Время истекло";
-                el.classList.add('timer-expired');
-            } else {
-                const d = Math.floor(left / 86400000);
-                const h = Math.floor((left % 86400000) / 3600000);
-                const m = Math.floor((left % 3600000) / 60000);
-                const s = Math.floor((left % 60000) / 1000);
-                el.innerHTML = `⏱ ${d > 0 ? d+'д ' : ''}${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-            }
-        });
-    }
-    setInterval(updateTimers, 1000);
-
-    function openAddMode() {
-        document.getElementById('addStatic').style.display = 'none';
-        document.getElementById('addActive').style.display = 'flex';
-        document.getElementById('addZone').dataset.mode = 'active';
-        document.getElementById('inlineInput').focus();
-    }
-
-    function toggleTimerFields(e) {
-        e.stopPropagation();
-        isTimerEnabled = !isTimerEnabled;
-        document.getElementById('timerFields').style.display = isTimerEnabled ? 'block' : 'none';
-    }
-
-    async function submitNewTask(e) {
-        e.stopPropagation();
-        const text = document.getElementById('inlineInput').value.trim();
+    function addTask() {
+        const text = document.getElementById('taskText').value;
         if (!text) return;
+        const ms = ( (parseInt(document.getElementById('d').value)||0)*86400 + (parseInt(document.getElementById('h').value)||0)*3600 + (parseInt(document.getElementById('m').value)||0)*60 + (parseInt(document.getElementById('s').value)||0) ) * 1000;
+        const deadline = ms > 0 ? Date.now() + ms : null;
 
-        let deadline = null;
-        if (isTimerEnabled) {
-            const d = parseInt(document.getElementById('dInput').value) || 0;
-            const h = parseInt(document.getElementById('hInput').value) || 0;
-            const m = parseInt(document.getElementById('mInput').value) || 0;
-            const s = parseInt(document.getElementById('sInput').value) || 0;
-            deadline = Date.now() + (d * 86400000) + (h * 3600000) + (m * 60000) + (s * 1000);
-        }
-
-        tasks.push({ id: generateId(), text, done: false, deadline, createdAt: Date.now() });
-        closeAddMode();
-        render();
-        await syncWithServer();
-        tg.HapticFeedback.impactOccurred('medium');
-    }
-
-    function closeAddMode() {
-        document.getElementById('addStatic').style.display = 'flex';
+        tasks.push({ id: Date.now().toString(), text, done: false, deadline, createdAt: Date.now() });
+        document.getElementById('taskText').value = '';
+        document.getElementById('addStatic').style.display = 'block';
         document.getElementById('addActive').style.display = 'none';
-        document.getElementById('addZone').dataset.mode = '';
-        isTimerEnabled = false;
+        render();
+        sync();
     }
 
-    window.toggleTask = async (index) => {
-        tasks[index].done = !tasks[index].done;
-        render();
-        await syncWithServer();
-    };
-
-    window.deleteTask = async (e, id) => {
-        e.stopPropagation();
+    async function deleteTask(id) {
         tasks = tasks.filter(t => t.id !== id);
         render();
-        await fetch('/goals/delete', {
+        await fetch('https://github.com/keil1488/DG18bot', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Secret': SECRET },
             body: JSON.stringify({ goal_id: id })
         });
-    };
+    }
 
-    window.onload = render;
+    function toggle(id) {
+        const t = tasks.find(x => x.id === id);
+        if (t) { t.done = !t.done; render(); sync(); }
+    }
+
+    function render() {
+        const container = document.getElementById('taskList');
+        container.innerHTML = '';
+        tasks.forEach(t => {
+            const div = document.createElement('div');
+            div.className = `task-item ${t.done ? 'completed' : ''}`;
+
+            let timer = '';
+            if (t.deadline && !t.done) {
+                const diff = t.deadline - Date.now();
+                if (diff < 0) timer = '<div class="timer-badge timer-expired">⌛ Время вышло</div>';
+                else {
+                    const parts = new Date(diff).toISOString().substr(11, 8);
+                    timer = `<div class="timer-badge">⏱ Осталось: ${Math.floor(diff/86400000)}д ${parts}</div>`;
+                }
+            }
+
+            div.innerHTML = `
+                <div class="task-row">
+                    <div class="checkbox ${t.done ? 'checked' : ''}" onclick="toggle('${t.id}')"></div>
+                    <div class="task-text">${t.text}</div>
+                    <div class="delete-btn" onclick="deleteTask('${t.id}')">🗑</div>
+                </div>
+                ${timer}
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    setInterval(render, 1000);
+    render();
 </script>
 </body>
 </html>
