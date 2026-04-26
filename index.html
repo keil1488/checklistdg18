@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #ffffff);
+            --text-color: var(--tg-theme-text-color, #000000);
+            --hint-color: var(--tg-theme-hint-color, #999999);
+            --button-color: var(--tg-theme-button-color, #248bed);
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #f4f4f5);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0; padding: 16px;
+            display: flex; flex-direction: column;
+        }
+        h2 { font-size: 20px; margin-bottom: 20px; }
+        .task-list { list-style: none; padding: 0; margin: 0; }
+        .task-item {
+            display: flex; align-items: center;
+            padding: 12px; background: var(--secondary-bg);
+            border-radius: 12px; margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+        .task-item.completed { opacity: 0.6; }
+        .checkbox {
+            width: 22px; height: 22px;
+            border: 2px solid var(--button-color);
+            border-radius: 50%; margin-right: 12px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+        }
+        .checkbox.checked { background: var(--button-color); }
+        .checkbox.checked::after {
+            content: '✓'; color: white; font-size: 14px;
+        }
+        .task-text { flex-grow: 1; font-size: 16px; }
+        .task-text.strikethrough { text-decoration: line-through; }
+        #add-container {
+            position: fixed; bottom: 20px; left: 16px; right: 16px;
+            display: flex; gap: 8px;
+        }
+        input {
+            flex-grow: 1; padding: 12px; border-radius: 10px;
+            border: 1px solid var(--hint-color);
+            background: var(--bg-color); color: var(--text-color);
+        }
+        button {
+            padding: 12px 20px; border-radius: 10px; border: none;
+            background: var(--button-color); color: white; font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h2>Задачи на сегодня</h2>
+    <div class="task-list" id="taskList"></div>
+
+    <div id="add-container">
+        <input type="text" id="taskInput" placeholder="Новая задача...">
+        <button onclick="addTask()">+</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        const listElement = document.getElementById('taskList');
+        const inputElement = document.getElementById('taskInput');
+
+        tg.expand();
+        tg.ready();
+
+        let tasks = JSON.parse(localStorage.getItem('my_tasks') || '[]');
+
+        function render() {
+            listElement.innerHTML = '';
+            tasks.forEach((task, index) => {
+                const item = document.createElement('div');
+                item.className = `task-item ${task.done ? 'completed' : ''}`;
+                item.innerHTML = `
+                    <div class="checkbox ${task.done ? 'checked' : ''}" onclick="toggleTask(${index})"></div>
+                    <span class="task-text ${task.done ? 'strikethrough' : ''}">${task.text}</span>
+                    <span style="color: var(--hint-color); cursor:pointer" onclick="deleteTask(${index})">✕</span>
+                `;
+                listElement.appendChild(item);
+            });
+            localStorage.setItem('my_tasks', JSON.stringify(tasks));
+        }
+
+        function addTask() {
+            const text = inputElement.value.trim();
+            if (text) {
+                tasks.push({ text, done: false });
+                inputElement.value = '';
+                tg.HapticFeedback.impactOccurred('light');
+                render();
+            }
+        }
+
+        window.toggleTask = (index) => {
+            tasks[index].done = !tasks[index].done;
+            tg.HapticFeedback.selectionChanged();
+            render();
+        };
+
+        window.deleteTask = (index) => {
+            tasks.splice(index, 1);
+            render();
+        };
+
+        render();
+    </script>
+</body>
+</html>
