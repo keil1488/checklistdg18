@@ -15,10 +15,66 @@
             --card-hover-bg: rgba(74, 217, 255, 0.08);
         }
 
+        /* ===== SPLASH ===== */
+        #splash-screen {
+            position: fixed; inset: 0;
+            background: var(--bg-color);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        #splash-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .splash-logo-wrap {
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+            animation: splashPopIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        @keyframes splashPopIn {
+            from { opacity: 0; transform: scale(0.3); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .splash-title {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 72px;
+            font-weight: 900;
+            color: #4AD9FF;
+            letter-spacing: 8px;
+            text-shadow: 0 0 30px rgba(74, 217, 255, 0.7), 0 0 60px rgba(74, 217, 255, 0.3);
+        }
+
+        .splash-pulse {
+            position: absolute;
+            width: 180px; height: 80px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-color);
+            animation: splashPulse 1.6s 0.5s ease-out infinite;
+        }
+        .splash-pulse2 { animation-delay: 0.9s; }
+        @keyframes splashPulse {
+            0%   { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
+
+        .splash-tagline {
+            margin-top: 28px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px; color: var(--accent-color);
+            letter-spacing: 2px; text-transform: uppercase; font-weight: 600;
+            animation: splashFadeUp 0.6s 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+        @keyframes splashFadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== ОСНОВНОЙ КОД ===== */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: var(--bg-color); color: var(--text-main);
             margin: 0;
             padding: max(20px, env(safe-area-inset-top)) 20px 20px;
             display: flex; flex-direction: column; min-height: 100vh;
@@ -31,67 +87,34 @@
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         #local-clock { margin-top: 10px; font-size: 32px; font-weight: 800; color: var(--accent-color); letter-spacing: 1px; text-shadow: 0 0 15px rgba(74, 217, 255, 0.3); }
 
-        /* --- АНИМАЦИЯ ПЛАШЕК --- */
         .task-item, .add-placeholder {
             background: var(--card-bg); border: 1px solid rgba(74, 217, 255, 0.1);
             border-radius: 20px; padding: 14px 18px; margin-bottom: 12px;
             transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-            position: relative;
-            cursor: pointer;
+            position: relative; cursor: pointer;
         }
-
         @media (hover: hover) {
             .task-item:hover, .add-placeholder:hover {
-                background: var(--card-hover-bg);
-                border-color: rgba(74, 217, 255, 0.3);
-                transform: translateY(-2px) scale(1.01);
-                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                background: var(--card-hover-bg); border-color: rgba(74, 217, 255, 0.3);
+                transform: translateY(-2px) scale(1.01); box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             }
         }
-
-        .task-item:active, .add-placeholder:active {
-            transform: scale(0.97);
-            opacity: 0.9;
-        }
-
+        .task-item:active, .add-placeholder:active { transform: scale(0.97); opacity: 0.9; }
         .task-row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-
-        .task-content-left {
-            display: flex;
-            align-items: center;
-            flex-grow: 1;
-            padding: 8px 0;
-            cursor: pointer;
-        }
-
+        .task-content-left { display: flex; align-items: center; flex-grow: 1; padding: 8px 0; cursor: pointer; }
         .deadline-badge { font-size: 12px; margin-top: 8px; color: var(--accent-color); font-family: ui-monospace, monospace; }
         .deadline-expired { color: var(--danger-color); font-weight: 700; }
-
         .checkbox-container { width: 24px; height: 24px; border: 2px solid var(--accent-color); border-radius: 50%; margin-right: 15px; position: relative; flex-shrink: 0; transition: background 0.2s; }
         .checkbox-container.checked { background: var(--accent-color); }
         .checkbox-container.checked::after { content: '✓'; position: absolute; color: #000; left: 5px; top: 1px; font-weight: bold; font-size: 14px; }
-
         .right-action { display: flex; gap: 4px; flex-shrink: 0; margin-left: 10px; }
-
-        .action-btn {
-            width: 44px; height: 44px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 50%; font-size: 20px;
-            transition: background 0.2s, transform 0.1s;
-            cursor: pointer; -webkit-user-select: none;
-        }
-
+        .action-btn { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 20px; transition: background 0.2s, transform 0.1s; cursor: pointer; -webkit-user-select: none; }
         .action-btn:active { background: rgba(255, 255, 255, 0.1); transform: scale(0.85); }
-
         .edit-btn { color: #808080; }
         .delete-btn { color: var(--danger-color); }
-
         .task-text { font-size: 17px; line-height: 1.4; word-break: break-word; }
         .edit-input { background: transparent; border: none; color: white; font-size: 17px; width: 100%; outline: none; border-bottom: 1px solid var(--accent-color); padding: 5px 0; }
-
         .add-form-content { width: 100%; margin-top: 15px; display: none; flex-direction: column; }
-
-        /* --- АНИМАЦИЯ КНОПКИ --- */
         .main-submit-btn {
             background: linear-gradient(135deg, var(--accent-color), #2BB5FF);
             color: #000; border: none; border-radius: 14px; padding: 16px;
@@ -100,38 +123,37 @@
             transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
             box-shadow: 0 4px 10px rgba(74, 217, 255, 0.2);
         }
-
         @media (hover: hover) {
-            .main-submit-btn:hover {
-                transform: translateY(-2px);
-                filter: brightness(1.1);
-                box-shadow: 0 6px 20px rgba(74, 217, 255, 0.4);
-            }
+            .main-submit-btn:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 6px 20px rgba(74, 217, 255, 0.4); }
         }
         .main-submit-btn:active { transform: scale(0.96) translateY(0); }
-
-        /* --- АНИМАЦИЯ ТЕКСТА DEADLINE --- */
         .toggle-deadline-link {
             color: var(--accent-color); font-size: 15px; font-weight: 600;
             margin: 12px auto; text-align: center; display: block;
             width: fit-content; padding: 10px; cursor: pointer;
             transition: transform 0.2s ease, text-shadow 0.2s ease, opacity 0.2s ease;
         }
-
         @media (hover: hover) {
-            .toggle-deadline-link:hover {
-                transform: scale(1.05);
-                text-shadow: 0 0 8px rgba(74, 217, 255, 0.5);
-            }
+            .toggle-deadline-link:hover { transform: scale(1.05); text-shadow: 0 0 8px rgba(74, 217, 255, 0.5); }
         }
         .toggle-deadline-link:active { opacity: 0.7; transform: scale(0.95); }
-
         .completed { opacity: 0.4; }
         .completed .task-text { text-decoration: line-through; }
     </style>
 </head>
 <body>
 
+<!-- SPLASH SCREEN -->
+<div id="splash-screen">
+    <div class="splash-logo-wrap">
+        <div class="splash-pulse"></div>
+        <div class="splash-pulse splash-pulse2"></div>
+        <div class="splash-title">DG18</div>
+    </div>
+    <div class="splash-tagline">Твои цели — твоя история</div>
+</div>
+
+<!-- ОСНОВНОЙ КОНТЕНТ -->
 <div class="header-container">
     <h2 id="typewriter"></h2>
     <div id="local-clock">00:00:00</div>
@@ -146,7 +168,6 @@
             <span style="color: var(--text-hint); font-size: 16px;">Вписать свою ЦЕЛЬ в историю</span>
         </div>
     </div>
-
     <div class="add-form-content" id="formContent">
         <input type="text" id="inlineInput" class="edit-input" placeholder="Название цели..." style="margin-bottom: 15px;">
         <div class="toggle-deadline-link" id="deadlineToggle" onclick="toggleTimeFields()">+ Добавить deadline 💀</div>
@@ -163,6 +184,12 @@
 </div>
 
 <script>
+    window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            document.getElementById('splash-screen').classList.add('hidden');
+        }, 2200);
+    });
+
     const tg = window.Telegram.WebApp;
     const listElement = document.getElementById('taskList');
     const inlineInput = document.getElementById('inlineInput');
@@ -197,7 +224,6 @@
             const item = document.createElement('div');
             item.className = `task-item ${task.done ? 'completed' : ''}`;
             let deadlineHtml = task.deadline ? `<div class="deadline-badge" id="timer-${index}">⏳...</div>` : '';
-
             item.innerHTML = `
                 <div class="task-row">
                     <div class="task-content-left" onclick="toggleTask(${index})">
@@ -244,42 +270,32 @@
         document.getElementById('formContent').style.display = 'flex';
         inlineInput.focus();
     }
-
     function toggleTimeFields() {
         const ts = document.getElementById('timeSettings');
         const btn = document.getElementById('deadlineToggle');
-        if (ts.style.display === 'none') {
-            ts.style.display = 'block'; btn.innerText = "- Убрать deadline";
-        } else {
-            ts.style.display = 'none'; btn.innerText = "+ Добавить deadline 💀";
-        }
+        if (ts.style.display === 'none') { ts.style.display = 'block'; btn.innerText = "- Убрать deadline"; }
+        else { ts.style.display = 'none'; btn.innerText = "+ Добавить deadline 💀"; }
     }
-
     function submitNewTask(e) {
         if(e) e.stopPropagation();
         const val = inlineInput.value.trim();
         if (!val) return;
-
         let deadlineTime = null;
         const d = parseInt(document.getElementById('td-d').value) || 0;
         const h = parseInt(document.getElementById('td-h').value) || 0;
         const m = parseInt(document.getElementById('td-m').value) || 0;
         const s = parseInt(document.getElementById('td-s').value) || 0;
-
         if (d+h+m+s > 0) deadlineTime = new Date().getTime() + (d*86400000) + (h*3600000) + (m*60000) + (s*1000);
-
         tasks.push({ text: val, done: false, deadline: deadlineTime });
         resetForm(); render();
         try { tg.HapticFeedback.impactOccurred('medium'); } catch(e){}
     }
-
     function resetForm() {
         inlineInput.value = '';
         document.getElementById('formContent').style.display = 'none';
         document.getElementById('timeSettings').style.display = 'none';
         document.getElementById('deadlineToggle').innerText = "+ Добавить deadline 💀";
     }
-
     window.openEditMode = (e, index) => {
         e.stopPropagation();
         document.getElementById(`text-${index}`).style.display = 'none';
@@ -287,7 +303,6 @@
         document.getElementById(`input-${index}`).focus();
         try { tg.HapticFeedback.impactOccurred('light'); } catch(e){}
     };
-
     window.saveEdit = (e, index) => {
         e.stopPropagation();
         const newVal = document.getElementById(`input-${index}`).value.trim();
@@ -295,14 +310,12 @@
         render();
         try { tg.HapticFeedback.impactOccurred('medium'); } catch(e){}
     };
-
     window.deleteTask = (e, index) => {
         e.stopPropagation();
         tasks.splice(index, 1);
         render();
         try { tg.HapticFeedback.notificationOccurred('warning'); } catch(e){}
     };
-
     window.toggleTask = (index) => {
         tasks[index].done = !tasks[index].done;
         render();
