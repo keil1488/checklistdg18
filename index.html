@@ -8,168 +8,146 @@
         :root {
             --bg-color: #0F0F0F;
             --accent-color: #4AD9FF;
+            --danger-color: #FF4A4A;
             --text-main: #FFFFFF;
             --text-hint: #808080;
-            --card-bg: rgba(255, 255, 255, 0.03);
-            --card-hover-bg: rgba(74, 217, 255, 0.06);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-hover-bg: rgba(74, 217, 255, 0.08);
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
-            margin: 0;
-            padding: 24px 20px;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+            margin: 0; padding: 20px;
+            display: flex; flex-direction: column; min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .header-container {
-            height: 60px;
-            margin-bottom: 30px;
-            display: flex; justify-content: center; align-items: center; text-align: center;
-        }
-
+        .header-container { margin-bottom: 30px; text-align: center; }
         h2 {
-            margin: 0; font-weight: 700; font-size: 22px; letter-spacing: -0.5px;
+            margin: 0; font-weight: 700; font-size: 18px;
             border-right: 2px solid var(--accent-color);
-            white-space: nowrap; overflow: hidden; width: 0;
             display: inline-block; animation: caret 0.7s step-end infinite;
+            line-height: 1.4; min-height: 1.4em;
+        }
+        #local-clock {
+            margin-top: 10px; font-size: 32px; font-weight: 800;
+            color: var(--accent-color); letter-spacing: 1px;
+            text-shadow: 0 0 15px rgba(74, 217, 255, 0.3);
         }
 
         @keyframes caret { from, to { border-color: transparent } 50% { border-color: var(--accent-color) } }
 
-        /* Плашки с мягкой анимацией */
         .task-item, .add-placeholder {
-            background: var(--card-bg);
-            border: 1px solid rgba(74, 217, 255, 0.1);
-            border-radius: 18px;
-            padding: 18px;
-            margin-bottom: 12px;
-            display: flex; align-items: center;
-            opacity: 0; transform: translateY(15px);
-            animation: slideIn 0.5s ease forwards;
-            /* Более мягкий переход */
-            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1),
-                        background 0.4s ease,
-                        border-color 0.4s ease,
-                        box-shadow 0.4s ease;
-            cursor: pointer;
-            position: relative;
+            background: var(--card-bg); border: 1px solid rgba(74, 217, 255, 0.1);
+            border-radius: 20px; padding: 18px; margin-bottom: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; cursor: pointer;
         }
 
         .task-item:hover, .add-placeholder:hover {
-            transform: scale(1.01) translateY(-1px); /* Очень легкое увеличение */
+            transform: scale(1.01);
             background: var(--card-hover-bg);
             border-color: rgba(74, 217, 255, 0.3);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
 
-        .task-item:active, .add-placeholder:active {
-            transform: scale(0.99); /* Мягкое сжатие */
-            transition: transform 0.1s;
+        .task-item:active, .add-placeholder:active { transform: scale(0.98); opacity: 0.8; }
+
+        .task-row { display: flex; align-items: center; width: 100%; }
+
+        .deadline-badge {
+            font-size: 12px; margin-top: 10px; color: var(--accent-color);
+            font-family: ui-monospace, monospace; font-weight: 500;
         }
+        .deadline-expired { color: var(--danger-color); font-weight: 700; }
 
-        @keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
-
-        /* Идеально центрированный плюс */
         .plus-icon {
-            width: 26px; height: 26px;
-            border: 1.5px solid var(--accent-color);
-            border-radius: 50%;
-            margin-right: 15px;
+            width: 30px; height: 30px; border: 2px solid var(--accent-color);
+            border-radius: 50%; margin-right: 15px;
             display: flex; align-items: center; justify-content: center;
-            color: var(--accent-color);
-            flex-shrink: 0;
-            font-size: 20px;
-            line-height: 0; /* Убирает смещение текста */
-            transition: transform 0.3s ease;
+            color: var(--accent-color); flex-shrink: 0; font-size: 22px;
         }
 
-        .add-placeholder:hover .plus-icon {
-            transform: rotate(90deg);
-            background: var(--accent-color);
-            color: #000;
-        }
-
-        /* Иконка и кнопка в правом углу */
-        .right-action {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 5;
-        }
-
-        .edit-icon {
-            color: var(--text-hint);
-            font-size: 18px;
-            padding: 8px;
-            opacity: 0.5;
-            transition: opacity 0.2s, color 0.2s;
-        }
-
-        .edit-icon:hover { color: var(--accent-color); opacity: 1; }
-
-        .inline-ok {
-            background: var(--accent-color);
-            border: none; border-radius: 10px;
-            padding: 6px 14px;
-            color: #000; font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(74, 217, 255, 0.2);
-        }
-
-        .edit-input {
-            background: transparent; border: none;
-            color: white; font-size: 17px;
-            width: 100%; outline: none;
-        }
+        .right-action { position: absolute; right: 15px; top: 18px; display: flex; gap: 8px; }
+        .action-btn { padding: 5px; opacity: 0.6; font-size: 18px; transition: 0.2s; }
+        .action-btn:hover { opacity: 1; transform: scale(1.1); }
 
         .checkbox-container {
-            width: 24px; height: 24px;
-            border: 2px solid var(--accent-color);
-            border-radius: 50%;
-            margin-right: 15px;
-            position: relative; flex-shrink: 0;
-            pointer-events: none;
+            width: 26px; height: 26px; border: 2px solid var(--accent-color);
+            border-radius: 50%; margin-right: 15px; position: relative; flex-shrink: 0;
+        }
+        .checkbox-container.checked { background: var(--accent-color); }
+        .checkbox-container.checked::after { content: '✓'; position: absolute; color: #000; left: 6px; top: 2px; font-weight: bold; }
+
+        .task-text { font-size: 17px; flex-grow: 1; padding-right: 80px; line-height: 1.4; }
+        .edit-input { background: transparent; border: none; color: white; font-size: 17px; width: 100%; outline: none; }
+
+        .add-form-content { width: 100%; margin-top: 15px; display: none; flex-direction: column; }
+
+        .time-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+        .time-unit { display: flex; flex-direction: column; align-items: center; }
+        .time-unit label { font-size: 10px; color: var(--text-hint); margin-bottom: 5px; text-transform: uppercase; }
+        .time-field {
+            width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(74, 217, 255, 0.3);
+            color: white; border-radius: 12px; text-align: center; padding: 12px 0; font-size: 16px; font-weight: bold;
         }
 
-        .checkbox-container.checked {
-            background: var(--accent-color);
-            box-shadow: 0 0 15px var(--accent-color);
+        .main-submit-btn {
+            background: linear-gradient(135deg, var(--accent-color), #2BB5FF);
+            color: #000; border: none; border-radius: 14px; padding: 16px;
+            font-size: 16px; font-weight: 800; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-transform: uppercase; letter-spacing: 1px;
         }
 
-        .checkbox-container.checked::after {
-            content: '✓'; position: absolute; color: #000;
-            font-weight: bold; font-size: 14px; left: 5px; top: 2px;
+        /* Увеличенная кнопка дедлайна */
+        .toggle-deadline-link {
+            color: var(--accent-color); font-size: 15px; font-weight: 600;
+            margin: 12px 0; text-align: center; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            transition: opacity 0.2s;
         }
+        .toggle-deadline-link:active { opacity: 0.6; }
 
-        .task-text { font-size: 17px; flex-grow: 1; padding-right: 45px; }
         .completed { opacity: 0.4; }
         .completed .task-text { text-decoration: line-through; }
-
     </style>
 </head>
 <body>
 
 <div class="header-container">
     <h2 id="typewriter"></h2>
+    <div id="local-clock">00:00:00</div>
 </div>
 
 <div class="task-list" id="taskList"></div>
 
-<div class="add-placeholder" id="addZone" onclick="openAddMode()">
-    <div class="plus-icon">+</div>
-    <div id="addStatic" style="flex-grow:1;">
-        <span style="color: var(--text-hint); font-size: 17px;">Вписать свою ЦЕЛЬ в историю</span>
-    </div>
-    <div id="addActive" style="display:none; align-items:center; flex-grow:1;">
-        <input type="text" id="inlineInput" class="edit-input" placeholder="Пиши здесь...">
-        <div class="right-action">
-            <button class="inline-ok" onclick="submitNewTask(event)">OK</button>
+<div class="add-placeholder" id="addZone">
+    <div class="task-row" onclick="openAddMode()">
+        <div class="plus-icon">+</div>
+        <div id="addStatic" style="flex-grow:1;">
+            <span style="color: var(--text-hint); font-size: 16px;">Вписать свою ЦЕЛЬ в историю</span>
         </div>
+        <div id="addActive" style="display:none; flex-grow:1;">
+            <input type="text" id="inlineInput" class="edit-input" placeholder="Название цели...">
+        </div>
+    </div>
+
+    <div class="add-form-content" id="formContent">
+        <div class="toggle-deadline-link" id="deadlineToggle" onclick="toggleTimeFields()">+ Добавить deadline 💀</div>
+
+        <div id="timeSettings" style="display: none;">
+            <div class="time-grid">
+                <div class="time-unit"><label>Дни</label><input type="number" id="td-d" class="time-field" value="0"></div>
+                <div class="time-unit"><label>Час</label><input type="number" id="td-h" class="time-field" value="0"></div>
+                <div class="time-unit"><label>Мин</label><input type="number" id="td-m" class="time-field" value="0"></div>
+                <div class="time-unit"><label>Сек</label><input type="number" id="td-s" class="time-field" value="0"></div>
+            </div>
+        </div>
+
+        <button class="main-submit-btn" id="finalSubmit" onclick="submitNewTask(event)">Поставить цель</button>
     </div>
 </div>
 
@@ -179,59 +157,35 @@
     const addZone = document.getElementById('addZone');
     const inlineInput = document.getElementById('inlineInput');
     const titleElement = document.getElementById('typewriter');
+    const clockElement = document.getElementById('local-clock');
 
-    tg.expand();
-    tg.ready();
-    tg.setHeaderColor('#0F0F0F');
+    tg.expand(); tg.ready(); tg.setHeaderColor('#0F0F0F');
 
-    // База фраз по времени суток
+    function updateClock() {
+        const now = new Date(); clockElement.textContent = now.toLocaleTimeString('ru-RU');
+    }
+    setInterval(updateClock, 1000); updateClock();
+
     const greetings = {
-        morning: [
-            "Утро — лучшее время, чтобы поставить цели",
-            "Спишь? А ТВОИ цели не спят",
-            "Твой день — твои достижения",
-            "Утро, тишина мыслей, время определить ЦЕЛИ",
-            "Утро, свежесть, идеальное время задать направление"
-        ],
-        day: [
-            "День в разгаре, самое время добавить ЦЕЛИ",
-            "День, ясность, время двигаться к целям",
-            "День дышит движением, будь в потоке",
-            "Сейчас, здесь, делай важное",
-            "Меньше мыслей — больше действий"
-        ],
-        evening: [
-            "Ночь, Тишина, самое время для формулировки ЦЕЛЕЙ",
-            "День позади, время отметить победы",
-            "Ночь, концентрация, формулируй главное",
-            "Когда всё замолкает, рождаются цели",
-            "Без ТЬМЫ не было бы СВЕТА, без ЦЕЛЕЙ — РЕЗУЛЬТАТА"
-        ]
+        morning: ["Утро — лучшее время, чтобы поставить цели", "Спишь? А ТВОИ цели не спят", "Твой день — твои достижения"],
+        day: ["День в разгаре, самое время добавить ЦЕЛИ", "День, ясность, время двигаться к целям"],
+        evening: ["Ночь, Тишина, самое время для формулировки ЦЕЛЕЙ", "День позади, время отметить победы"]
     };
 
     function getGreeting() {
         const hour = new Date().getHours();
-        let category;
-        if (hour >= 5 && hour < 12) category = 'morning';
-        else if (hour >= 12 && hour < 18) category = 'day';
-        else category = 'evening';
-
-        const pool = greetings[category];
+        const cat = (hour >= 5 && hour < 12) ? 'morning' : (hour >= 12 && hour < 18) ? 'day' : 'evening';
+        const pool = greetings[cat];
         return pool[Math.floor(Math.random() * pool.length)];
     }
 
-    // Печать заголовка
     const titleText = getGreeting();
     let charIdx = 0;
     function typeWriter() {
         if (charIdx < titleText.length) {
             titleElement.innerHTML += titleText.charAt(charIdx);
-            titleElement.style.width = "auto";
-            charIdx++;
-            setTimeout(typeWriter, 60); // Чуть ускорил печать для длинных фраз
-        } else {
-            titleElement.style.borderRight = "none";
-        }
+            charIdx++; setTimeout(typeWriter, 50);
+        } else { titleElement.style.borderRight = "none"; }
     }
 
     let tasks = JSON.parse(localStorage.getItem('dg18_tasks') || '[]');
@@ -241,95 +195,130 @@
         tasks.forEach((task, index) => {
             const item = document.createElement('div');
             item.className = `task-item ${task.done ? 'completed' : ''}`;
-            item.onclick = () => toggleTask(index);
+            item.onclick = (e) => { if(e.target.closest('.action-btn')) return; toggleTask(index); };
+
+            let deadlineHtml = '';
+            if (task.deadline) deadlineHtml = `<div class="deadline-badge" id="timer-${index}">⏳...</div>`;
 
             item.innerHTML = `
-                <div class="checkbox-container ${task.done ? 'checked' : ''}" id="check-${index}"></div>
-                <span class="task-text" id="text-${index}">${task.text}</span>
-
-                <div class="right-action" id="action-${index}">
-                    <div class="edit-icon" onclick="openEditMode(event, ${index})">✎</div>
-                </div>
-
-                <div id="edit-box-${index}" style="display:none; align-items:center; width:100%;">
-                    <input type="text" class="edit-input" id="input-${index}" value="${task.text}">
+                <div class="task-row">
+                    <div class="checkbox-container ${task.done ? 'checked' : ''}"></div>
+                    <span class="task-text" id="text-${index}">${task.text}</span>
                     <div class="right-action">
-                        <button class="inline-ok" onclick="saveEdit(event, ${index})">OK</button>
+                        <div class="action-btn" style="color: #808080" onclick="openEditMode(event, ${index})">✎</div>
+                        <div class="action-btn" style="color: #FF4A4A" onclick="deleteTask(event, ${index})">🗑</div>
                     </div>
+                </div>
+                ${deadlineHtml}
+                <div id="edit-box-${index}" style="display:none; align-items:center; width:100%; margin-top:10px; gap:10px;">
+                    <input type="text" class="edit-input" id="input-${index}" value="${task.text}">
+                    <button class="main-submit-btn" style="padding: 8px 15px; font-size: 12px;" onclick="saveEdit(event, ${index})">OK</button>
                 </div>
             `;
             listElement.appendChild(item);
         });
         localStorage.setItem('dg18_tasks', JSON.stringify(tasks));
+        updateTimers();
     }
+
+    function updateTimers() {
+        tasks.forEach((task, index) => {
+            if (!task.deadline || task.done) return;
+            const timerEl = document.getElementById(`timer-${index}`);
+            if (!timerEl) return;
+            const distance = task.deadline - new Date().getTime();
+            if (distance < 0) {
+                timerEl.innerHTML = "💀 ВРЕМЯ ВЫШЛО"; timerEl.className = "deadline-badge deadline-expired";
+            } else {
+                const d = Math.floor(distance / 86400000);
+                const h = Math.floor((distance % 86400000) / 3600000);
+                const m = Math.floor((distance % 3600000) / 60000);
+                const s = Math.floor((distance % 60000) / 1000);
+                timerEl.innerHTML = `⏳ ${d}д ${h}ч ${m}м ${s}с`;
+            }
+        });
+    }
+    setInterval(updateTimers, 1000);
 
     function openAddMode() {
-        if (addZone.dataset.mode === 'active') return;
-        addZone.dataset.mode = 'active';
         document.getElementById('addStatic').style.display = 'none';
         document.getElementById('addActive').style.display = 'flex';
+        document.getElementById('formContent').style.display = 'flex';
         inlineInput.focus();
-        tg.HapticFeedback.impactOccurred('light');
     }
 
-    function submitNewTask(e) {
-        e.stopPropagation();
-        const val = inlineInput.value.trim();
-        if (val) {
-            tasks.push({ text: val, done: false });
-            closeAddMode();
-            tg.HapticFeedback.impactOccurred('medium');
-            render();
+    function toggleTimeFields() {
+        const ts = document.getElementById('timeSettings');
+        const btn = document.getElementById('deadlineToggle');
+        if (ts.style.display === 'none') {
+            ts.style.display = 'block'; btn.innerText = "- Убрать deadline";
+        } else {
+            ts.style.display = 'none'; btn.innerText = "+ Добавить deadline 💀";
         }
     }
 
-    function closeAddMode() {
-        addZone.dataset.mode = '';
+    function submitNewTask(e) {
+        if(e) e.stopPropagation();
+        const val = inlineInput.value.trim();
+        if (!val) return;
+
+        let deadlineTime = null;
+        const d = parseInt(document.getElementById('td-d').value) || 0;
+        const h = parseInt(document.getElementById('td-h').value) || 0;
+        const m = parseInt(document.getElementById('td-m').value) || 0;
+        const s = parseInt(document.getElementById('td-s').value) || 0;
+
+        if (d+h+m+s > 0) deadlineTime = new Date().getTime() + (d*86400000) + (h*3600000) + (m*60000) + (s*1000);
+
+        tasks.push({ text: val, done: false, deadline: deadlineTime });
+        resetForm(); render();
+        tg.HapticFeedback.impactOccurred('medium');
+    }
+
+    function resetForm() {
         inlineInput.value = '';
+        document.querySelectorAll('.time-field').forEach(f => f.value = 0);
         document.getElementById('addStatic').style.display = 'block';
         document.getElementById('addActive').style.display = 'none';
+        document.getElementById('formContent').style.display = 'none';
+        document.getElementById('timeSettings').style.display = 'none';
     }
+
+    // Слушатель Enter
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const activeEl = document.activeElement;
+            if (activeEl.id === 'inlineInput' || activeEl.classList.contains('time-field')) {
+                submitNewTask();
+            }
+        }
+    });
 
     window.openEditMode = (e, index) => {
         e.stopPropagation();
         document.getElementById(`text-${index}`).style.display = 'none';
-        document.getElementById(`check-${index}`).style.display = 'none';
-        document.getElementById(`action-${index}`).style.display = 'none';
-
-        const box = document.getElementById(`edit-box-${index}`);
-        box.style.display = 'flex';
-        const inp = document.getElementById(`input-${index}`);
-        inp.focus();
-        inp.setSelectionRange(inp.value.length, inp.value.length);
+        document.getElementById(`edit-box-${index}`).style.display = 'flex';
     };
 
     window.saveEdit = (e, index) => {
         e.stopPropagation();
         const newVal = document.getElementById(`input-${index}`).value.trim();
-        if (newVal) {
-            tasks[index].text = newVal;
-            render();
-            tg.HapticFeedback.impactOccurred('light');
-        }
+        if (newVal === "") tasks.splice(index, 1);
+        else tasks[index].text = newVal;
+        render();
+    };
+
+    window.deleteTask = (e, index) => {
+        e.stopPropagation(); tasks.splice(index, 1); render();
+        tg.HapticFeedback.notificationOccurred('warning');
     };
 
     window.toggleTask = (index) => {
-        tasks[index].done = !tasks[index].done;
+        tasks[index].done = !tasks[index].done; render();
         tg.HapticFeedback.selectionChanged();
-        render();
     };
 
-    document.addEventListener('click', (e) => {
-        if (!addZone.contains(e.target)) closeAddMode();
-    });
-
-    inlineInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') submitNewTask(e); });
-
-    window.onload = () => {
-        typeWriter();
-        render();
-    };
+    window.onload = () => { typeWriter(); render(); };
 </script>
-
 </body>
 </html>
