@@ -2,127 +2,351 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --bg-color: #0F0F0F; --accent-color: #4AD9FF; --timer-color: #FF9F4A; --danger-color: #FF4A4A; --text-main: #FFFFFF; --text-hint: #808080; --card-bg: rgba(255, 255, 255, 0.03); }
-        body { font-family: sans-serif; background: var(--bg-color); color: var(--text-main); padding: 20px; margin: 0; }
-        .task-item, .add-placeholder { background: var(--card-bg); border: 1px solid rgba(74,217,255,0.1); border-radius: 15px; padding: 15px; margin-bottom: 10px; position: relative; }
-        .task-row { display: flex; align-items: center; }
-        .checkbox { width: 22px; height: 22px; border: 2px solid var(--accent-color); border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
-        .checkbox.checked { background: var(--accent-color); }
-        .task-text { flex-grow: 1; font-size: 16px; }
-        .timer-badge { font-size: 11px; color: var(--timer-color); margin-top: 8px; font-family: monospace; }
-        .timer-expired { color: var(--danger-color); }
-        .delete-btn { color: var(--danger-color); font-size: 18px; margin-left: 10px; cursor: pointer; }
-        .add-active { display: none; flex-direction: column; }
-        .time-inputs { display: flex; gap: 5px; margin-top: 10px; }
-        input { background: rgba(255,255,255,0.1); border: 1px solid var(--accent-color); color: white; border-radius: 5px; padding: 5px; width: 40px; text-align: center; }
-        .btn-ok { background: var(--accent-color); color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: bold; margin-top: 10px; }
+        :root {
+            --bg-color: #0F0F0F;
+            --accent-color: #4AD9FF;
+            --danger-color: #FF4A4A;
+            --text-main: #FFFFFF;
+            --text-hint: #808080;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-hover-bg: rgba(74, 217, 255, 0.08);
+        }
+
+        /* ===== SPLASH ===== */
+        #splash-screen {
+            position: fixed; inset: 0;
+            background: var(--bg-color);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        #splash-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .splash-logo-wrap {
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+            animation: splashPopIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        @keyframes splashPopIn {
+            from { opacity: 0; transform: scale(0.3); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .splash-title {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 72px; font-weight: 900; color: #4AD9FF; letter-spacing: 8px;
+            text-shadow: 0 0 30px rgba(74, 217, 255, 0.7), 0 0 60px rgba(74, 217, 255, 0.3);
+        }
+
+        .splash-pulse {
+            position: absolute; width: 180px; height: 80px; border-radius: 50%;
+            border: 2px solid var(--accent-color); animation: splashPulse 1.6s 0.5s ease-out infinite;
+        }
+        .splash-pulse2 { animation-delay: 0.9s; }
+        @keyframes splashPulse {
+            0%   { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
+
+        .splash-tagline {
+            margin-top: 28px; font-size: 14px; color: var(--accent-color);
+            letter-spacing: 2px; text-transform: uppercase; font-weight: 600;
+            animation: splashFadeUp 0.6s 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+        @keyframes splashFadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== ОСНОВНОЙ КОД ===== */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color); color: var(--text-main);
+            margin: 0; padding: max(20px, env(safe-area-inset-top)) 20px 20px;
+            display: flex; flex-direction: column; min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .header-container { margin-bottom: 30px; text-align: center; }
+        h2 { margin: 0; font-weight: 700; font-size: 18px; line-height: 1.4; min-height: 2.8em; display: inline-block; }
+        .cursor { color: var(--accent-color); font-weight: bold; animation: blink 1s step-end infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        #local-clock {
+            opacity: 0; transform: translateY(10px);
+            margin-top: 10px; font-size: 32px; font-weight: 800; color: var(--accent-color);
+            letter-spacing: 1px; text-shadow: 0 0 15px rgba(74, 217, 255, 0.3);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        #taskList, #addZone {
+            opacity: 0;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        /* --- ВОЗВРАЩЕННЫЕ АНИМАЦИИ ПЛАШЕК --- */
+        .task-item, .add-placeholder {
+            background: var(--card-bg); border: 1px solid rgba(74, 217, 255, 0.1);
+            border-radius: 20px; padding: 14px 18px; margin-bottom: 12px;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            position: relative; cursor: pointer;
+        }
+
+        @media (hover: hover) {
+            .task-item:hover, .add-placeholder:hover {
+                background: var(--card-hover-bg);
+                border-color: rgba(74, 217, 255, 0.3);
+                transform: translateY(-2px) scale(1.01);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            }
+        }
+        .task-item:active, .add-placeholder:active {
+            transform: scale(0.97);
+            opacity: 0.9;
+        }
+
+        .task-row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+        .task-content-left { display: flex; align-items: center; flex-grow: 1; padding: 8px 0; cursor: pointer; }
+        .checkbox-container { width: 24px; height: 24px; border: 2px solid var(--accent-color); border-radius: 50%; margin-right: 15px; position: relative; flex-shrink: 0; transition: background 0.2s; }
+        .checkbox-container.checked { background: var(--accent-color); }
+        .checkbox-container.checked::after { content: '✓'; position: absolute; color: #000; left: 5px; top: 1px; font-weight: bold; }
+
+        .right-action { display: flex; gap: 4px; flex-shrink: 0; margin-left: 10px; }
+        .action-btn {
+            width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; font-size: 20px; transition: background 0.2s, transform 0.1s;
+            cursor: pointer; -webkit-user-select: none;
+        }
+        .action-btn:active { background: rgba(255, 255, 255, 0.1); transform: scale(0.85); }
+
+        .edit-input { background: transparent; border: none; color: white; font-size: 17px; width: 100%; outline: none; border-bottom: 1px solid var(--accent-color); padding: 5px 0; }
+        .add-form-content { width: 100%; margin-top: 15px; display: none; flex-direction: column; }
+
+        /* --- ВОЗВРАЩЕННАЯ АНИМАЦИЯ КНОПКИ --- */
+        .main-submit-btn {
+            background: linear-gradient(135deg, var(--accent-color), #2BB5FF);
+            color: #000; border: none; border-radius: 14px; padding: 16px;
+            font-size: 16px; font-weight: 800; cursor: pointer;
+            text-transform: uppercase; width: 100%;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            box-shadow: 0 4px 10px rgba(74, 217, 255, 0.2);
+        }
+        @media (hover: hover) {
+            .main-submit-btn:hover {
+                transform: translateY(-2px);
+                filter: brightness(1.1);
+                box-shadow: 0 6px 20px rgba(74, 217, 255, 0.4);
+            }
+        }
+        .main-submit-btn:active { transform: scale(0.96) translateY(0); }
+
+        /* --- ВОЗВРАЩЕННАЯ АНИМАЦИЯ ТЕКСТА DEADLINE --- */
+        .toggle-deadline-link {
+            color: var(--accent-color); font-size: 15px; font-weight: 600;
+            margin: 12px auto; text-align: center; display: block;
+            width: fit-content; padding: 10px; cursor: pointer;
+            transition: transform 0.2s ease, text-shadow 0.2s ease, opacity 0.2s ease;
+        }
+        @media (hover: hover) {
+            .toggle-deadline-link:hover {
+                transform: scale(1.05);
+                text-shadow: 0 0 8px rgba(74, 217, 255, 0.5);
+            }
+        }
+        .toggle-deadline-link:active { opacity: 0.7; transform: scale(0.95); }
+
+        .deadline-badge { font-size: 12px; margin-top: 8px; color: var(--accent-color); font-family: ui-monospace, monospace; }
         .completed { opacity: 0.4; }
+        .completed .task-text { text-decoration: line-through; }
     </style>
 </head>
 <body>
 
-<div id="taskList"></div>
+<div id="splash-screen">
+    <div class="splash-logo-wrap">
+        <div class="splash-pulse"></div>
+        <div class="splash-pulse splash-pulse2"></div>
+        <div class="splash-title">DG18</div>
+    </div>
+    <div class="splash-tagline">Твои цели — твоя история</div>
+</div>
 
-<div class="add-placeholder" id="addZone">
-    <div id="addStatic" onclick="openAdd()">+ Вписать цель</div>
-    <div id="addActive" class="add-active">
-        <input type="text" id="taskText" placeholder="Что нужно сделать?" style="width: 100%; margin-bottom: 10px;">
-        <div style="font-size: 12px; color: var(--accent-color);">Таймер (Д:Ч:М:С)</div>
-        <div class="time-inputs">
-            <input type="number" id="d" placeholder="0">
-            <input type="number" id="h" placeholder="0">
-            <input type="number" id="m" placeholder="0">
-            <input type="number" id="s" placeholder="0">
+<div class="header-container">
+    <h2 id="typewriter"></h2>
+    <div id="local-clock">00:00:00</div>
+</div>
+
+<div id="taskList" class="task-list"></div>
+
+<div id="addZone" class="add-placeholder">
+    <div class="task-row" onclick="openAddMode()">
+        <div class="task-content-left">
+            <div style="width: 30px; height: 30px; border: 2px solid var(--accent-color); border-radius: 50%; margin-right: 15px; display: flex; align-items: center; justify-content: center; color: var(--accent-color); font-size: 22px;">+</div>
+            <span style="color: var(--text-hint); font-size: 16px;">Вписать свою ЦЕЛЬ в историю</span>
         </div>
-        <button class="btn-ok" onclick="addTask()">Добавить цель</button>
+    </div>
+    <div class="add-form-content" id="formContent">
+        <input type="text" id="inlineInput" class="edit-input" placeholder="Название цели..." style="margin-bottom: 15px;">
+        <div class="toggle-deadline-link" id="deadlineToggle" onclick="toggleTimeFields()">+ Добавить deadline 💀</div>
+        <div id="timeSettings" style="display: none; margin-bottom: 20px;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                <input type="number" id="td-d" class="edit-input" placeholder="Дни" style="text-align: center;">
+                <input type="number" id="td-h" class="edit-input" placeholder="Час" style="text-align: center;">
+                <input type="number" id="td-m" class="edit-input" placeholder="Мин" style="text-align: center;">
+                <input type="number" id="td-s" class="edit-input" placeholder="Сек" style="text-align: center;">
+            </div>
+        </div>
+        <button class="main-submit-btn" onclick="submitNewTask(event)">Поставить цель</button>
     </div>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
-    const USER_ID = tg.initDataUnsafe?.user?.id || 12345;
-    const SECRET = "dg18secret";
-    let tasks = JSON.parse(localStorage.getItem('tasks_v3') || '[]');
+    const listElement = document.getElementById('taskList');
+    const inlineInput = document.getElementById('inlineInput');
+    const titleElement = document.getElementById('typewriter');
+    const clockElement = document.getElementById('local-clock');
+    const addZone = document.getElementById('addZone');
 
-    function openAdd() {
-        document.getElementById('addStatic').style.display = 'none';
-        document.getElementById('addActive').style.display = 'flex';
-        document.getElementById('taskText').focus();
-    }
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            document.getElementById('splash-screen').classList.add('hidden');
+            setTimeout(startSequence, 600);
+        }, 2200);
+    });
 
-    async function sync() {
-        localStorage.setItem('tasks_v3', JSON.stringify(tasks));
-        try {
-            await fetch('https://github.com/keil1488/DG18bot', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Secret': SECRET },
-                body: JSON.stringify({ user_id: USER_ID, goals: tasks })
-            });
-        } catch(e) {}
-    }
-
-    function addTask() {
-        const text = document.getElementById('taskText').value;
-        if (!text) return;
-        const ms = ( (parseInt(document.getElementById('d').value)||0)*86400 + (parseInt(document.getElementById('h').value)||0)*3600 + (parseInt(document.getElementById('m').value)||0)*60 + (parseInt(document.getElementById('s').value)||0) ) * 1000;
-        const deadline = ms > 0 ? Date.now() + ms : null;
-
-        tasks.push({ id: Date.now().toString(), text, done: false, deadline, createdAt: Date.now() });
-        document.getElementById('taskText').value = '';
-        document.getElementById('addStatic').style.display = 'block';
-        document.getElementById('addActive').style.display = 'none';
-        render();
-        sync();
-    }
-
-    async function deleteTask(id) {
-        tasks = tasks.filter(t => t.id !== id);
-        render();
-        await fetch('https://github.com/keil1488/DG18bot', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Secret': SECRET },
-            body: JSON.stringify({ goal_id: id })
+    function startSequence() {
+        typeWriter(() => {
+            clockElement.style.opacity = "1";
+            clockElement.style.transform = "translateY(0)";
+            setTimeout(() => {
+                listElement.style.opacity = "1";
+                addZone.style.opacity = "1";
+            }, 500);
         });
     }
 
-    function toggle(id) {
-        const t = tasks.find(x => x.id === id);
-        if (t) { t.done = !t.done; render(); sync(); }
+    tg.expand(); tg.ready();
+    tg.setHeaderColor('#0F0F0F');
+
+    function updateClock() {
+        const now = new Date();
+        clockElement.textContent = now.toLocaleTimeString('ru-RU');
     }
+    setInterval(updateClock, 1000); updateClock();
+
+    const greetings = ["Твой день — твои достижения", "Спишь? А ТВОИ цели не спят", "Время двигаться к целям"];
+    const titleText = greetings[Math.floor(Math.random() * greetings.length)];
+    let charIdx = 0;
+
+    function typeWriter(callback) {
+        if (charIdx < titleText.length) {
+            titleElement.innerHTML = titleText.substring(0, charIdx + 1) + '<span class="cursor">|</span>';
+            charIdx++;
+            if (charIdx === titleText.length - 3 && callback) callback();
+            setTimeout(() => typeWriter(callback), 50);
+        } else {
+            titleElement.innerHTML = titleText + '<span class="cursor">|</span>';
+        }
+    }
+
+    let tasks = JSON.parse(localStorage.getItem('dg18_tasks') || '[]');
 
     function render() {
-        const container = document.getElementById('taskList');
-        container.innerHTML = '';
-        tasks.forEach(t => {
-            const div = document.createElement('div');
-            div.className = `task-item ${t.done ? 'completed' : ''}`;
-
-            let timer = '';
-            if (t.deadline && !t.done) {
-                const diff = t.deadline - Date.now();
-                if (diff < 0) timer = '<div class="timer-badge timer-expired">⌛ Время вышло</div>';
-                else {
-                    const parts = new Date(diff).toISOString().substr(11, 8);
-                    timer = `<div class="timer-badge">⏱ Осталось: ${Math.floor(diff/86400000)}д ${parts}</div>`;
-                }
-            }
-
-            div.innerHTML = `
+        listElement.innerHTML = '';
+        tasks.forEach((task, index) => {
+            const item = document.createElement('div');
+            item.className = `task-item ${task.done ? 'completed' : ''}`;
+            let dlHtml = task.deadline ? `<div class="deadline-badge" id="timer-${index}">⏳...</div>` : '';
+            item.innerHTML = `
                 <div class="task-row">
-                    <div class="checkbox ${t.done ? 'checked' : ''}" onclick="toggle('${t.id}')"></div>
-                    <div class="task-text">${t.text}</div>
-                    <div class="delete-btn" onclick="deleteTask('${t.id}')">🗑</div>
+                    <div class="task-content-left" onclick="toggleTask(${index})">
+                        <div class="checkbox-container ${task.done ? 'checked' : ''}"></div>
+                        <span class="task-text" id="text-${index}">${task.text}</span>
+                    </div>
+                    <div class="right-action">
+                        <div class="action-btn edit-btn" style="color:#808080" onclick="openEditMode(event, ${index})">✎</div>
+                        <div class="action-btn delete-btn" style="color:var(--danger-color)" onclick="deleteTask(event, ${index})">🗑</div>
+                    </div>
                 </div>
-                ${timer}
+                ${dlHtml}
+                <div id="edit-box-${index}" style="display:none; align-items:center; width:100%; margin-top:10px; gap:10px;">
+                    <input type="text" class="edit-input" id="input-${index}" value="${task.text}">
+                    <div class="action-btn" style="color: var(--accent-color)" onclick="saveEdit(event, ${index})">OK</div>
+                </div>
             `;
-            container.appendChild(div);
+            listElement.appendChild(item);
         });
+        localStorage.setItem('dg18_tasks', JSON.stringify(tasks));
+        updateTimers();
     }
 
-    setInterval(render, 1000);
+    function updateTimers() {
+        tasks.forEach((task, index) => {
+            if (!task.deadline || task.done) return;
+            const timerEl = document.getElementById(`timer-${index}`);
+            if (!timerEl) return;
+            const dist = task.deadline - new Date().getTime();
+            if (dist < 0) {
+                timerEl.innerHTML = "💀 ВРЕМЯ ВЫШЛО"; timerEl.className = "deadline-badge deadline-expired";
+            } else {
+                const d = Math.floor(dist / 86400000);
+                const h = Math.floor((dist % 86400000) / 3600000);
+                const m = Math.floor((dist % 3600000) / 60000);
+                const s = Math.floor((dist % 60000) / 1000);
+                timerEl.innerHTML = `⏳ ${d}д ${h}ч ${m}м ${s}с`;
+            }
+        });
+    }
+    setInterval(updateTimers, 1000);
+
+    function openAddMode() { document.getElementById('formContent').style.display = 'flex'; inlineInput.focus(); }
+    function toggleTimeFields() {
+        const ts = document.getElementById('timeSettings');
+        const btn = document.getElementById('deadlineToggle');
+        ts.style.display = (ts.style.display === 'none') ? 'block' : 'none';
+        btn.innerText = (ts.style.display === 'none') ? "+ Добавить deadline 💀" : "- Убрать deadline";
+    }
+    function submitNewTask(e) {
+        if(e) e.stopPropagation();
+        const val = inlineInput.value.trim();
+        if (!val) return;
+        let dl = null;
+        const d = parseInt(document.getElementById('td-d').value) || 0;
+        const h = parseInt(document.getElementById('td-h').value) || 0;
+        const m = parseInt(document.getElementById('td-m').value) || 0;
+        const s = parseInt(document.getElementById('td-s').value) || 0;
+        if (d+h+m+s > 0) dl = new Date().getTime() + (d*86400000) + (h*3600000) + (m*60000) + (s*1000);
+        tasks.push({ text: val, done: false, deadline: dl });
+        resetForm(); render();
+        try { tg.HapticFeedback.impactOccurred('medium'); } catch(e){}
+    }
+    function resetForm() {
+        inlineInput.value = '';
+        document.getElementById('formContent').style.display = 'none';
+        document.getElementById('timeSettings').style.display = 'none';
+        document.getElementById('deadlineToggle').innerText = "+ Добавить deadline 💀";
+    }
+    window.openEditMode = (e, i) => {
+        e.stopPropagation();
+        document.getElementById(`text-${i}`).style.display = 'none';
+        document.getElementById(`edit-box-${i}`).style.display = 'flex';
+        document.getElementById(`input-${i}`).focus();
+    };
+    window.saveEdit = (e, i) => {
+        e.stopPropagation();
+        const newVal = document.getElementById(`input-${i}`).value.trim();
+        if (newVal !== "") tasks[i].text = newVal;
+        render();
+    };
+    window.deleteTask = (e, i) => { e.stopPropagation(); tasks.splice(i, 1); render(); };
+    window.toggleTask = (i) => { tasks[i].done = !tasks[i].done; render(); };
+
     render();
 </script>
 </body>
